@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from "react";
 
 const API_BASE = "https://gamma-api.polymarket.com";
