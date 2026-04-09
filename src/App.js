@@ -73,20 +73,30 @@ export default function App() {
       if (!p) return null;
       const vol = m.volumeNum || 0;
       const yesPct = p.yes * 100;
-      const isExtreme = yesPct < 5 || yesPct > 95;
-      const isUncertain = yesPct >= 40 && yesPct <= 60 && vol > 500000;
-      const isLowLiq = (yesPct < 10 || yesPct > 90) && vol < 100000;
-      if (!isExtreme && !isUncertain && !isLowLiq) return null;
-      let type, edge, severity;
-      if (yesPct < 5) { type = "NEAR ZERO"; edge = (5 - yesPct).toFixed(1); severity = yesPct < 2 ? "CRITICAL" : "HIGH"; }
-      else if (yesPct > 95) { type = "NEAR CERTAIN"; edge = (yesPct - 95).toFixed(1); severity = yesPct > 98 ? "CRITICAL" : "HIGH"; }
-      else if (isLowLiq) { type = "LOW LIQUIDITY"; edge = (Math.abs(yesPct - 50) - 40).toFixed(1); severity = "MEDIUM"; }
-      else { type = "UNCERTAIN"; edge = Math.abs(yesPct - 50).toFixed(1); severity = "LOW"; }
-      return { id: m.id, q: m.question, yesPct: yesPct.toFixed(1), type, edge, severity, vol };
-    }).filter(Boolean).sort((a, b) => {
-      const order = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-      return order[b.severity] - order[a.severity];
-    }).slice(0, 20);
+      if (vol < 50000) return null; // ignore low volume markets
+      if (yesPct < 3 || yesPct > 97) return null; // ignore obvious joke/resolved markets
+      let type, edge, severity, score;
+      if (yesPct >= 35 && yesPct <= 65) {
+        // Best: high vol near 50/50 — real uncertainty, real edge
+        type = "HIGH UNCERTAINTY";
+        edge = (10 - Math.abs(yesPct - 50)).toFixed(1);
+        severity = vol > 2000000 ? "CRITICAL" : vol > 500000 ? "HIGH" : "MEDIUM";
+        score = vol * (1 - Math.abs(yesPct - 50) / 50);
+      } else if (yesPct >= 15 && yesPct < 35) {
+        type = "UNDERDOG YES";
+        edge = yesPct.toFixed(1);
+        severity = vol > 1000000 ? "HIGH" : "MEDIUM";
+        score = vol * 0.5;
+      } else if (yesPct > 65 && yesPct <= 85) {
+        type = "FAVORITE YES";
+        edge = (100 - yesPct).toFixed(1);
+        severity = vol > 1000000 ? "HIGH" : "MEDIUM";
+        score = vol * 0.5;
+      } else {
+        return null;
+      }
+      return { id: m.id, q: m.question, yesPct: yesPct.toFixed(1), type, edge, severity, vol, score };
+    }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 20);
     setMispriced(results);
   };
 
