@@ -68,7 +68,7 @@ export default function App() {
         const p = parsePrices(m);
         if (!p) return null;
         const sum = p.yes + p.no;
-        if (sum >= 0.98) return null;
+        if (sum >= 1.02) return null;
         return {
           id: m.id,
           q: m.question,
