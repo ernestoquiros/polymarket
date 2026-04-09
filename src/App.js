@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
 
-const API_BASE = "/api/markets";
+const API_BASE = "";
 
 export default function App() {
   const [tab, setTab] = useState("arbitrage");
@@ -24,7 +24,7 @@ export default function App() {
     setError(null);
     try {
       const res = await fetch(
-        `${API_BASE}/markets?active=true&closed=false&limit=200&order=volumeNum&ascending=false`
+        `/api/markets`
       );
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const raw = await res.json();
